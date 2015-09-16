@@ -4,24 +4,24 @@ import Example.Chart.LineChartZH;
 import org.jfree.ui.RefineryUtilities;
 
 import java.util.ArrayList;
+/** Created by пк on 14.08.2015.
 
 /**
- * Created by пк on 14.08.2015.
  * 1-ий крок: виділити підйоми з датчиків позиціювання
  * 2-ий крок: записати дані з інших датчиків до масивів, відповідно до часу підйому.
  */
 /*
-TODO определить время подъёма
-2 записать показания датчиков во время подъема
-3 дискретизировать показания
-4 перевести в стобальную шкалу
+TODO определить время подъёма +
+2 записать показания датчиков во время подъема +
+3 дискретизировать показания +
+4 перевести в стобальную шкалу +
 ** первая матрица - один из узлов работает плохо
 ** вторая - следующий из узлов работает плохо
 ** будет 40 подъёмов, около 70% которых принадлежат только своей матрице
 ** производится обработка классов:
 * 1) считаются средние значения по каждому из столбцов
 * 2) получить средние значения каждого столбца
-* 3) задать контрольний допуск (первй раз на глаз (-+20)
+* 3) задать контрольний допуск (первый раз на глаз (-+20)
 * 4) сравнивая каждое значение с верхней и нижней границей мы получаем 0 или 1(попадает в инт.ервал)
 * 5) по бинарной матрице считаются средние значения по столбцам: если значение > 0,5 - 0, больше - 1. Так мы получим эталонный вектор
 * 6) сравнивая каждую реализацию бинарной матрицы с эталонным вектором, ищем кодовое расстояние(отличие строк бинарной матрицы от эталонного вектора в еденицах).
@@ -64,61 +64,59 @@ public class EIT {
         this.maximumHighValue = maximumHighValue;
     }
     public void getPodyom(BDArray bdArray){
-        for (int i = 0; i < bdArray.queries.get(0).valueList.size(); i++) {
-            if (i > 0) {
-                if (bdArray.queries.get(0).valueList.get(i) - bdArray.queries.get(0).valueList.get(i - 1) > 0 && bdArray.queries.get(0).valueList.get(i) > minimumDownValue) {
-                    this.podyomList.add(new Podyom());
-                    podyomList.get(podyomList.size() - 1).startTime = bdArray.queries.get(0).longTimeList.get(i);
-                    for (int j = i + 1; j < bdArray.queries.get(0).valueList.size(); j++) {
-                        if (bdArray.queries.get(0).valueList.get(j) - bdArray.queries.get(0).valueList.get(j - 1) < 0 && bdArray.queries.get(0).valueList.get(j) < maximumHighValue) {
-                            System.out.println(bdArray.queries.get(0).valueList.get(j - 1) + " " + bdArray.queries.get(0).valueList.get(j));
-                            podyomList.get(podyomList.size() - 1).stopTime = bdArray.queries.get(0).longTimeList.get(j);
-                            i = j;
-                            break;
-                        }
-
+        for (int i = 1; i < bdArray.queries.get(0).valueList.size(); i++) { // Прохід по значенню положення скіпа
+            if (bdArray.queries.get(0).valueList.get(i) - bdArray.queries.get(0).valueList.get(i - 1) > 0 && bdArray.queries.get(0).valueList.get(i) > minimumDownValue) { // Умова підйому
+                this.podyomList.add(new Podyom());
+                podyomList.get(podyomList.size() - 1).startTime = bdArray.queries.get(0).longTimeList.get(i);
+                for (int j = i + 1; j < bdArray.queries.get(0).valueList.size(); j++) {
+                    if (bdArray.queries.get(0).valueList.get(j) - bdArray.queries.get(0).valueList.get(j - 1) < 0 && bdArray.queries.get(0).valueList.get(j) < maximumHighValue) {// Умова закінчення підйому чи досягення максимального верхнього значення
+                        System.out.println(bdArray.queries.get(0).valueList.get(j - 1) + " " + bdArray.queries.get(0).valueList.get(j));
+                        podyomList.get(podyomList.size() - 1).stopTime = bdArray.queries.get(0).longTimeList.get(j);
+                        i = j;
+                        break;
                     }
-
                 }
             }
         }
     }
-    public void getPodyomSignals(BDArray bdArray){
+    public void getPodyomSignals(BDArray bdArray){// Запис сигналів до отриманих підйомів
         int podyomID = 0;
-        for (int i = 1; i < bdArray.queries.size(); i++) {
+        for (int i = 1; i < bdArray.queries.size(); i++) { // Прохід по масивам сигналаів, отриманих з БД
 
-            for (Podyom podyom : podyomList){
+            for (Podyom podyom : podyomList){ // Створення масивів даних та часу у підйомах
                 podyom.signal.add(new ArrayList<Double>());
                 podyom.time.add(new ArrayList<Long>());
             }
 
-            for (int j = 0; j < bdArray.queries.get(i).longTimeList.size(); j++) {
-                if (bdArray.queries.get(i).longTimeList.get(j) > podyomList.get(podyomID).stopTime) {
-
+            for (int j = 0; j < bdArray.queries.get(i).longTimeList.size(); j++) {// Прохід по значеннях сигналів у поточному масиві
+                if (bdArray.queries.get(i).longTimeList.get(j) > podyomList.get(podyomID).stopTime) {// Переходить до наступного підйому, якщо час перевищив значення поточного підйому
                     if(podyomID < podyomList.size() - 1)
                     podyomID++;
                     else {
-                        podyomID = 0;
+                        podyomID = 0;// Не пам'ятаю чи потрібно
                         break;
                     }
                 }
-                if (bdArray.queries.get(i).longTimeList.get(j) >= podyomList.get(podyomID).startTime) {
-                    //TODO Дописать запись начального значения сигнала в зависимости от времени
-                    if (podyomList.get(podyomID).signal.size() == 0 || j == 0){
-                        if (bdArray.queries.get(i).longTimeList.get(j) == podyomList.get(podyomID).startTime) {
+                if (bdArray.queries.get(i).longTimeList.get(j) >= podyomList.get(podyomID).startTime) {// Якщо значення часу перевищує початкове значення виконується перевірка на метод запису сигналу до підйому
+                    //TODO Дописать запись начального значения сигнала в зависимости от времени +
+                    if (podyomList.get(podyomID).signal.size() == 0 || j == 0){// Запис початкового значення
+                        if (bdArray.queries.get(i).longTimeList.get(j) == podyomList.get(podyomID).startTime) {// при співпаданні часу
                             podyomList.get(podyomID).signal.get(i - 1).add(bdArray.queries.get(i).valueList.get(j));
                             podyomList.get(podyomID).time.get(i - 1).add(bdArray.queries.get(i).longTimeList.get(j));
                         }
-                        else {
+                        else {// якщо час відрізняється
                             podyomList.get(podyomID).time.get(i - 1).add(podyomList.get(podyomID).startTime);
                             podyomList.get(podyomID).signal.get(i - 1).add(getYByX(podyomList.get(podyomID).startTime, bdArray.queries.get(i).longTimeList.get(j - 1), bdArray.queries.get(i).longTimeList.get(j), bdArray.queries.get(i).valueList.get(j - 1), bdArray.queries.get(i).valueList.get(j)));
+                            //TODO дописати запис сигналу що відрізняється +
+                            podyomList.get(podyomID).signal.get(i - 1).add(bdArray.queries.get(i).valueList.get(j));
+                            podyomList.get(podyomID).time.get(i - 1).add(bdArray.queries.get(i).longTimeList.get(j));
                         }
                     }
-                    else if (bdArray.queries.get(i).longTimeList.get(j + 1) > podyomList.get(podyomID).stopTime && bdArray.queries.get(i).longTimeList.get(j + 1) != podyomList.get(podyomID).stopTime) {
+                    else if (bdArray.queries.get(i).longTimeList.get(j + 1) > podyomList.get(podyomID).stopTime && bdArray.queries.get(i).longTimeList.get(j + 1) != podyomList.get(podyomID).stopTime) {//Якщо наступна ітерація перевищить stopTime
                         podyomList.get(podyomID).time.get(i - 1).add(podyomList.get(podyomID).stopTime);
                         podyomList.get(podyomID).signal.get(i - 1).add(getYByX(podyomList.get(podyomID).stopTime, bdArray.queries.get(i).longTimeList.get(j), bdArray.queries.get(i).longTimeList.get(j + 1), bdArray.queries.get(i).valueList.get(j), bdArray.queries.get(i).valueList.get(j + 1)));
                     }
-                    else {
+                    else {// Запис проміжних комбінацій
                         podyomList.get(podyomID).signal.get(i - 1).add(bdArray.queries.get(i).valueList.get(j));
                         podyomList.get(podyomID).time.get(i - 1).add(bdArray.queries.get(i).longTimeList.get(j));
                     }
