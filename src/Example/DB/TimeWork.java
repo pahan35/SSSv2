@@ -16,7 +16,7 @@ public class TimeWork {
         List<Long> longs = new ArrayList<Long>();
         List<String> strings = new ArrayList<String>();
 
-        //Formatting a date needs a timezone - otherwise the date get formatted to your system time zone.
+        //Formatting a date needs a timezone - otherwise the date get formatted to your system times zone.
         //Use 24h format HH. In 12h format hh can be in range 0-11, which makes 12 overflow to 0.
         DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
         formatter.setTimeZone(timezone);

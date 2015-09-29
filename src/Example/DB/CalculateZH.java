@@ -165,7 +165,7 @@ public class CalculateZH {
         }
         return cluster;
     }
-    public static double getYByX(double x, double xStart, double xEnd, double yStart, double yEnd) // считает значение у по х и у0
+    static double getYByX(double x, double xStart, double xEnd, double yStart, double yEnd) // считает значение у по х и у0
     {
         return (((x - xStart)/(xEnd - xStart)) * (yEnd - yStart)) + yStart;
     }

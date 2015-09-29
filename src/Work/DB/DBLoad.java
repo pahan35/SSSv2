@@ -1,16 +1,14 @@
 package Work.DB;
 
-import Example.DB.BDArray;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Created by пк on 08.07.2015.
  */
         public class DBLoad {
             public static void main(String[] args) {
-                /*BDArray connectBD = new BDArray();
-                //connectBD.BDArray();
+                /*BDRawData connectBD = new BDRawData();
+                //connectBD.BDRawData();
                 ArrayList<Long> timeKanat = connectBD.getLongKanat();
                 ArrayList<Long> timeKanatOrigin = timeKanat;
                 ArrayList<Long> timeOtklon = connectBD.getLongOtklon();

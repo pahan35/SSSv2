@@ -1,5 +1,7 @@
 package Example.DB;
 
+import Example.Chart.LineChartTest;
+
 import java.util.ArrayList;
 
 /**
@@ -8,11 +10,30 @@ import java.util.ArrayList;
 public class Podyom {
     public long startTime;
     public long stopTime;
-    public ArrayList<ArrayList<Double>> signal = new ArrayList<ArrayList<Double>>();
-    public ArrayList<ArrayList<Long>> time = new ArrayList<ArrayList<Long>>();
-    public ArrayList<ArrayList<Long>> quantTime = new ArrayList<ArrayList<Long>>();
-    public ArrayList<ArrayList<Double>> quantSignal = new ArrayList<ArrayList<Double>>();
-    public ArrayList<ArrayList<Double>> relativeSignal = new ArrayList<ArrayList<Double>>();
+    public ArrayList<ArrayList<Double>> signals = new ArrayList<ArrayList<Double>>();
+    public ArrayList<ArrayList<Long>> times = new ArrayList<ArrayList<Long>>();
+    public ArrayList<ArrayList<Long>> quantTimes = new ArrayList<ArrayList<Long>>();
+    public ArrayList<ArrayList<Double>> quantSignals = new ArrayList<ArrayList<Double>>();
+    public ArrayList<ArrayList<Double>> relativeSignals = new ArrayList<ArrayList<Double>>();
+    public ArrayList<ArrayList<Integer>> binaryMatrixs = new ArrayList<ArrayList<Integer>>();
+    private ArrayList<Double> averages = new ArrayList<Double>();
+
+    public static void main(String[] args) {
+        Podyom check = new Podyom(0L, 450L);
+        check.signals.add(new ArrayList<Double>());
+        check.times.add(new ArrayList<Long>());
+        for (long i = 0; i < 50; i++) {
+            check.signals.get(0).add(50 + Math.random() * i);
+            check.times.get(0).add(i * 23);
+        }
+        check.quant(7L);
+        check.getRelative();
+        check.getAverage();
+        check.getBinaryMatrix(20D);
+        ArrayList<Podyom> podyomList = new ArrayList<Podyom>();
+        podyomList.add(check);
+        LineChartTest lineTest1 = new LineChartTest("Test", podyomList);
+    }
 
     public Podyom(){}
 
@@ -20,33 +41,36 @@ public class Podyom {
         this.startTime = startTime;
         this.stopTime = stopTime;
     }
-    public void quant(long step){
+    public void quant(long step){ // TODO Потрібно перевірити
         long currentTime = startTime;
         ArrayList<Integer> currentSignalIndex = new ArrayList<Integer>();
-        for (int i = 0; i < signal.size(); i++) {
-            quantTime.add(new ArrayList<Long>());
-            quantSignal.add(new ArrayList<Double>());
+        for (int i = 0; i < signals.size(); i++) {
+            quantTimes.add(new ArrayList<Long>());
+            quantSignals.add(new ArrayList<Double>());
         }
-        for (int i = 0; i < signal.size(); i++) {
-            while (currentTime <= stopTime){
-                for (int j = 0; i < signal.get(i).size(); i++) {
-                    if ((time.get(i).get(j) >= currentTime) /*&& (time.get(i).get(j) <= stopTime)*/){
-                        if (currentTime == time.get(i).get(j)){
-                            quantTime.get(i).add(currentTime);
-                            quantSignal.get(i).add(signal.get(i).get(j));
+        for (int i = 0; i < signals.size(); i++) {
+            for (int j = 0; j < signals.get(i).size() - 1; j++) {
+                while (currentTime <= times.get(i).get(j + 1)){
+
+                    if ((times.get(i).get(j + 1) >= currentTime) /*&& (times.get(i).get(j) <= stopTime)*/){
+                        if (currentTime == times.get(i).get(j)){
+                            quantTimes.get(i).add(currentTime);
+                            quantSignals.get(i).add(signals.get(i).get(j));
                         }
-                        /*else if(currentTime + step > stopTime && j + 1 < signal.get(i).size() *//*&& currentTime != stopTime*//*){
-                            quantTime.get(i).add(currentTime);
-                            quantSignal.get(i).add(getYByX(currentTime, time.get(i).get(j), time.get(i).get(j + 1), signal.get(i).get(j), signal.get(i).get(j + 1)));
-                        }*/
+                        else if(currentTime + step > stopTime && j + 1 >= signals.get(i).size() /*&& currentTime != stopTime*/){
+                                quantTimes.get(i).add(currentTime);
+                                quantSignals.get(i).add(CalculateZH.getYByX(currentTime, times.get(i).get(j - 1), times.get(i).get(j), signals.get(i).get(j - 1), signals.get(i).get(j)));
+                                quantTimes.get(i).add(stopTime);
+                                quantSignals.get(i).add(signals.get(i).get(j));
+                            }
                         else {
-                            quantTime.get(i).add(currentTime);
-                            quantSignal.get(i).add(getYByX(currentTime,time.get(i).get(j - 1), time.get(i).get(j), signal.get(i).get(j - 1), signal.get(i).get(j)));
-                        }
+                            quantTimes.get(i).add(currentTime);
+                            quantSignals.get(i).add(CalculateZH.getYByX(currentTime, times.get(i).get(j), times.get(i).get(j + 1), signals.get(i).get(j), signals.get(i).get(j + 1)));
+                            }
                         currentTime += step;
                     }
                 }
-                //currentTime = startTime;
+                    //currentTime = startTime;
             }
             currentTime = startTime;
         }
@@ -55,26 +79,45 @@ public class Podyom {
         // Знайти максимальне і мінімальне значення датчиків у масиві сигналів
         ArrayList<Double> minList = new ArrayList<Double>();
         ArrayList<Double> maxList = new ArrayList<Double>();
-        for (int i = 0; i < quantSignal.size(); i++) {
-            minList.add(quantSignal.get(i).get(0));
-            maxList.add(quantSignal.get(i).get(0));
-            for (int j = 1; j < quantSignal.get(i).size(); j++) {
-                if (minList.get(i) > quantSignal.get(i).get(j))
-                    minList.set(i,quantSignal.get(i).get(j));
-                if (maxList.get(i) < quantSignal.get(i).get(j))
-                    maxList.set(i,quantSignal.get(i).get(j));
+        for (int i = 0; i < quantSignals.size(); i++) {
+            minList.add(quantSignals.get(i).get(0));
+            maxList.add(quantSignals.get(i).get(0));
+            for (int j = 1; j < quantSignals.get(i).size(); j++) {
+                if (minList.get(i) > quantSignals.get(i).get(j))
+                    minList.set(i, quantSignals.get(i).get(j));
+                if (maxList.get(i) < quantSignals.get(i).get(j))
+                    maxList.set(i, quantSignals.get(i).get(j));
             }
         }
         // Записати відносне значення датчика до масиву
-        for (int i = 0; i < quantSignal.size(); i++) {
-            relativeSignal.add(new ArrayList<Double>());
-            for (int j = 0; j < quantSignal.get(i).size(); j++) {
-                relativeSignal.get(i).add((quantSignal.get(i).get(j) - minList.get(i)) / (maxList.get(i) - minList.get(i)));
+        for (int i = 0; i < quantSignals.size(); i++) {
+            relativeSignals.add(new ArrayList<Double>());
+            for (int j = 0; j < quantSignals.get(i).size(); j++) {
+                relativeSignals.get(i).add(((quantSignals.get(i).get(j) - minList.get(i)) / (maxList.get(i) - minList.get(i))) * 100);
             }
         }
     }
-    private double getYByX(double x, double xStart, double xEnd, double yStart, double yEnd) // считает значение у по х и у0
-    {
-        return (((x - xStart)/(xEnd - xStart)) * (yEnd - yStart)) + yStart;
+
+    public void getAverage(){
+        for (ArrayList<Double> dList : relativeSignals) {
+            double sum = 0;
+            int size = dList.size();
+            for (double d : dList) {
+                sum += d;
+            }
+            averages.add(sum/size);
+        }
+    }
+
+    public void getBinaryMatrix(double porog){ // Отримуємо бінарні матриці з відносних сигналів
+        for (int i = 0; i < relativeSignals.size(); i++) {
+            this.binaryMatrixs.add(new ArrayList<Integer>());
+            for (int j = 0; j < relativeSignals.get(i).size(); j++) {
+                if (relativeSignals.get(i).get(j) < averages.get(i) - porog || relativeSignals.get(i).get(j) > averages.get(i) + porog)
+                    binaryMatrixs.get(i).add(0);
+                else
+                    binaryMatrixs.get(i).add(1);
+            }
+        }
     }
 }
