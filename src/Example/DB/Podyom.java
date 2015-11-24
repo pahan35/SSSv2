@@ -120,4 +120,16 @@ public class Podyom {
             }
         }
     }
+    public Podyom modify(double[][] percentOfMistake){
+        Podyom podyom = null;
+        try {
+            podyom = (Podyom) this.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        // // TODO: 07.11.2015 implement modify fumction
+        return podyom;
+    }
+
+
 }

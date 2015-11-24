@@ -4,6 +4,8 @@ import Example.Chart.LineChartZH;
 import org.jfree.ui.RefineryUtilities;
 
 import java.util.ArrayList;
+import java.util.function.Predicate;
+
 /** Created by пк on 14.08.2015.
 
 /**
@@ -31,7 +33,7 @@ TODO определить время подъёма +
 * 10) Посчитать (2.7.4)
 * 11) Построить график 2.7.4 от радиуса
  */
-public class EIT {
+public class EIT implements Cloneable {
     ArrayList<ArrayList<Double>> signal = new ArrayList<ArrayList<Double>>();
     ArrayList<ArrayList<Long>> time = new ArrayList<ArrayList<Long>>();
     ArrayList<Long> timeUp = new ArrayList<Long>();
@@ -44,7 +46,7 @@ public class EIT {
     double maximumHighValue;
     long dopusk;
     public static void main(String[] args) {
-        QueryList queryList = new QueryList(52, "2015-01-16 00:10:14", "2015-01-16 01:30:14");
+        QueryList queryList = new QueryList(52, "2015-01-16 00:10:14", "2015-01-16 03:30:14");
         queryList.addQuery("akhz1_data", 1, 1D); // позиция скипа
         queryList.addQuery("akhz1_data", 2, 1D);
         queryList.addQuery("amper", 1, 1D);
@@ -54,29 +56,41 @@ public class EIT {
         BDRawData bdRawData = new BDRawData(queryList);
         //LineChartZH lineChartZH = new LineChartZH("Работа системы с " + bdRawData.queries.get(0).source + "_" + bdRawData.queries.get(0).sourceID, bdRawData.queries);
 
-        EIT norm = new EIT(-522D, 49D);
-        norm.getPodyom(bdRawData);
-        norm.getPodyomSignals(bdRawData);
-        for(Podyom podyom : norm.podyomList){
+        EIT norm = new EIT(-522D, 49D, bdRawData);
+        Container container = new Container(norm.podyomList);
+
+        System.out.println("I`m OK)");
+    }
+    public EIT(double minimumDownValue, double maximumHighValue, BDRawData bdRawData){
+        this.minimumDownValue = minimumDownValue;
+        this.maximumHighValue = maximumHighValue;
+        getPodyom(bdRawData);
+        getPodyomSignals(bdRawData);
+        process();
+
+    }
+    public EIT(EIT eit, ArrayList<Double> wrongProcent){//TODO зробити "запис" "поганого" класу
+        this.minimumDownValue = eit.minimumDownValue;
+        this.maximumHighValue = eit.maximumHighValue;
+        for (int i = 1; i < eit.podyomList.get(0).quantSignals.size(); i++) {
+            for (int j = 0; j < eit.podyomList.size(); j++) {
+
+            }
+        }
+    }
+    private void process(){
+
+        for(Podyom podyom : podyomList){
             podyom.quant(100L);
             podyom.getRelative();
             podyom.getAverage();
             podyom.getBinaryMatrix(20D);
         }
-        norm.makeRealisations();
-        norm.getEtalon();
-        norm.getDistance();
-        System.out.println("I`m OK)");
-
-
+        makeRealisations();
+        getEtalon();
+        getDistance();
     }
-    public EIT(double minimumDownValue, double maximumHighValue){
-        this.minimumDownValue = minimumDownValue;
-        this.maximumHighValue = maximumHighValue;
-    }
-    public EIT(EIT eit, ArrayList<Double> wrongProcent){//TODO зробити "запис" "поганого" класу
 
-    }
     public void getPodyom(BDRawData bdRawData){
         for (int i = 1; i < bdRawData.queries.get(0).valueList.size(); i++) { // Прохід по значенню положення скіпа
             if (bdRawData.queries.get(0).valueList.get(i) - bdRawData.queries.get(0).valueList.get(i - 1) > 0 && bdRawData.queries.get(0).valueList.get(i) > minimumDownValue) { // Умова підйому
@@ -84,7 +98,7 @@ public class EIT {
                 podyomList.get(podyomList.size() - 1).startTime = bdRawData.queries.get(0).longTimeList.get(i);
                 for (int j = i + 1; j < bdRawData.queries.get(0).valueList.size(); j++) {
                     if (bdRawData.queries.get(0).valueList.get(j) - bdRawData.queries.get(0).valueList.get(j - 1) < 0 && bdRawData.queries.get(0).valueList.get(j) < maximumHighValue) {// Умова закінчення підйому чи досягення максимального верхнього значення
-                        System.out.println(bdRawData.queries.get(0).valueList.get(j - 1) + " " + bdRawData.queries.get(0).valueList.get(j));
+                        //System.out.println(bdRawData.queries.get(0).valueList.get(j - 1) + " " + bdRawData.queries.get(0).valueList.get(j));
                         podyomList.get(podyomList.size() - 1).stopTime = bdRawData.queries.get(0).longTimeList.get(j);
                         i = j;
                         break;
@@ -187,5 +201,28 @@ public class EIT {
     {
         return (((x - xStart)/(xEnd - xStart)) * (yEnd - yStart)) + yStart;
     }
+
+    /**
+     *
+     * @param percentOfMistake
+     * First row contains indexes of sensors id which we need to modify
+     * Second row contains percent of modifying in this sensors
+     * @return
+     */
+    protected EIT createAnother(double[][] percentOfMistake){
+        EIT eit = null;
+        try {
+            eit = (EIT) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        for (int i = 0; i < eit.podyomList.size(); i++) {
+            eit.podyomList.set(i,this.podyomList.get(i).modify(percentOfMistake));
+        }
+
+        return eit;
+    }
+
+
 
 }
