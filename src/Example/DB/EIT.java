@@ -48,15 +48,20 @@ public class EIT implements Cloneable {
     public static void main(String[] args) {
         QueryList queryList = new QueryList(52, "2015-01-16 00:10:14", "2015-01-16 03:30:14");
         queryList.addQuery("akhz1_data", 1, 1D); // позиция скипа
-        queryList.addQuery("akhz1_data", 2, 1D);
+        //queryList.addQuery("akhz1_data", 2, 1D);
         queryList.addQuery("amper", 1, 1D);
         queryList.addQuery("amper", 2, 1D);
-        queryList.addQuery("event_data", 6, 1D);
-        queryList.addQuery("event_data", 7, 1D);
+        //queryList.addQuery("event_data", 6, 1D);
+        //queryList.addQuery("event_data", 7, 1D);
         BDRawData bdRawData = new BDRawData(queryList);
         //LineChartZH lineChartZH = new LineChartZH("Работа системы с " + bdRawData.queries.get(0).source + "_" + bdRawData.queries.get(0).sourceID, bdRawData.queries);
 
         EIT norm = new EIT(-522D, 49D, bdRawData);
+
+        norm.podyomList.remove(31);
+        norm.podyomList.remove(10);
+        norm.podyomList.remove(3);
+        norm.podyomList.remove(1);
         Container container = new Container(norm.podyomList);
 
         System.out.println("I`m OK)");
@@ -221,6 +226,12 @@ public class EIT implements Cloneable {
         }
 
         return eit;
+    }
+    private void removeBadPodyoms(){
+        ArrayList<Integer> podyomSizes = new ArrayList<Integer>();
+        for (int i = 0; i < this.podyomList.size(); i++) {
+
+        }
     }
 
 

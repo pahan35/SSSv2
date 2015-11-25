@@ -68,6 +68,13 @@ public class Container {
                 }
             }
         }
+        for (int i = 0; i < relativeCutedSignals.size(); i++) {
+            for (int j = 0; j < relativeCutedSignals.get(i).size(); j++) {
+                System.out.print(relativeCutedSignals.get(i).get(j) + " ");
+            }
+            System.out.println();
+            System.out.println();
+        }
     }
 
     private void findAverage(){
@@ -117,14 +124,20 @@ public class Container {
     private void calculate01InEtalon(){
         int zeroes = 0;
         int ones = 0;
+        System.out.println();
         for (int i = 0; i < etalon.size(); i++) {
+            System.out.print(etalon.get(i));
             if(etalon.get(i) == 0)
                 zeroes++;
             else if (etalon.get(i) == 1)
                 ones++;
         }
+        System.out.println();
         System.out.println("0 = "+zeroes);
         System.out.println("1 = " + ones);
+    }
+    public void comparisonEtalonWithAnoterRealization(ArrayList<Podyom> podyoms){
+        //// TODO: 25.11.2015 Сделать сравнение еталона с чужими реализациями
     }
 
     public void process(){
